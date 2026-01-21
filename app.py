@@ -1,74 +1,53 @@
-import sqlite3
-import joblib
 import numpy as np
+import joblib
+import os
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-# Load the trained model
-model = joblib.load('house_price_model.pkl')
+# --- CRITICAL FIX: ABSOLUTE PATH TO MODEL ---
+# This ensures Python finds the file regardless of where the server starts
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(current_dir, 'model', 'house_price_model.pkl')
 
-def init_db():
-    """Create the database and table if they don't exist."""
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS predictions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            med_inc REAL,
-            house_age REAL,
-            ave_rooms REAL,
-            ave_bedrms REAL,
-            population REAL,
-            ave_occup REAL,
-            latitude REAL,
-            longitude REAL,
-            predicted_price REAL
-        )
-    ''')
-    conn.commit()
-    conn.close()
+print(f"Looking for model at: {model_path}") # Debug log for server
+
+if not os.path.exists(model_path):
+    print("CRITICAL ERROR: Model file not found on server!")
+else:
+    print("Model file found.")
+
+try:
+    model = joblib.load(model_path)
+except Exception as e:
+    print(f"Error loading model: {e}")
+# -------------------------------------------
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    prediction_text = ""
+    prediction_text = None
     
     if request.method == 'POST':
-        # Get data from form
         try:
+            # Get features
             features = [
-                float(request.form['MedInc']),
-                float(request.form['HouseAge']),
-                float(request.form['AveRooms']),
-                float(request.form['AveBedrms']),
-                float(request.form['Population']),
-                float(request.form['AveOccup']),
-                float(request.form['Latitude']),
-                float(request.form['Longitude'])
+                float(request.form['OverallQual']),
+                float(request.form['GrLivArea']),
+                float(request.form['GarageCars']),
+                float(request.form['TotalBsmtSF']),
+                float(request.form['FullBath']),
+                float(request.form['YearBuilt'])
             ]
             
-            # Predict
             final_features = [np.array(features)]
             prediction = model.predict(final_features)
-            output = round(prediction[0], 2) # Price in $100,000s
+            output = round(prediction[0], 2)
+            prediction_text = f"${output:,.2f}"
             
-            prediction_text = f"Estimated House Price: ${output * 100000:,.2f}"
-
-            # Save to Database
-            conn = sqlite3.connect('database.db')
-            cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO predictions (med_inc, house_age, ave_rooms, ave_bedrms, population, ave_occup, latitude, longitude, predicted_price)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (*features, output))
-            conn.commit()
-            conn.close()
-
         except Exception as e:
             prediction_text = f"Error: {str(e)}"
 
     return render_template('index.html', prediction_text=prediction_text)
 
 if __name__ == "__main__":
-    init_db()  # Initialize DB on start
     app.run(debug=True)
