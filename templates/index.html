@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Price Predictor</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        label { display: block; margin-top: 10px; }
+        input { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 20px; padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        .result { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 5px solid #28a745; }
+    </style>
+</head>
+<body>
+    <h2>🏡 California House Price Prediction</h2>
+    <form action="/" method="post">
+        <label>Median Income (in $10k):</label>
+        <input type="number" step="0.01" name="MedInc" placeholder="e.g. 8.32" required>
+
+        <label>House Age (Years):</label>
+        <input type="number" step="0.1" name="HouseAge" placeholder="e.g. 41" required>
+
+        <label>Average Rooms:</label>
+        <input type="number" step="0.1" name="AveRooms" placeholder="e.g. 6.9" required>
+
+        <label>Average Bedrooms:</label>
+        <input type="number" step="0.01" name="AveBedrms" placeholder="e.g. 1.02" required>
+
+        <label>Population:</label>
+        <input type="number" step="1" name="Population" placeholder="e.g. 322" required>
+
+        <label>Average Occupancy:</label>
+        <input type="number" step="0.01" name="AveOccup" placeholder="e.g. 2.55" required>
+
+        <label>Latitude:</label>
+        <input type="number" step="0.01" name="Latitude" placeholder="e.g. 37.88" required>
+
+        <label>Longitude:</label>
+        <input type="number" step="0.01" name="Longitude" placeholder="e.g. -122.23" required>
+
+        <button type="submit">Predict Price</button>
+    </form>
+
+    {% if prediction_text %}
+    <div class="result">
+        <h3>{{ prediction_text }}</h3>
+    </div>
+    {% endif %}
+</body>
+</html>git push -u origin main
